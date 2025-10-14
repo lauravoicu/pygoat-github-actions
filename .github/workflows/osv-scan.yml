@@ -13,11 +13,12 @@ permissions:
   contents: read
 
 jobs:
-  # PRs from same repo: scan ONLY core lockfiles + upload SARIF
+  # PR: scan ONLY core lockfiles, upload SARIF (same-repo PRs only)
   osv-pr:
     if: github.event_name == 'pull_request' && github.event.pull_request.head.repo.fork == false
     permissions:
       contents: read
+      actions: read
       security-events: write
     uses: google/osv-scanner-action/.github/workflows/osv-scanner-reusable-pr.yml@e92b5d07338d4f0ba0981dffed17c48976ca4730
     with:
@@ -25,11 +26,12 @@ jobs:
         --lockfile requirements.txt
         --lockfile requirements-dev.txt
 
-  # Pushes & schedule: scan ONLY core lockfiles + upload SARIF
+  # Push/schedule: scan ONLY core lockfiles, upload SARIF
   osv-scheduled:
     if: github.event_name != 'pull_request'
     permissions:
       contents: read
+      actions: read
       security-events: write
     uses: google/osv-scanner-action/.github/workflows/osv-scanner-reusable.yml@e92b5d07338d4f0ba0981dffed17c48976ca4730
     with:
