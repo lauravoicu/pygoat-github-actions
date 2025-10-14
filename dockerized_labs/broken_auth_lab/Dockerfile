@@ -2,9 +2,12 @@ FROM python:3.9-slim@sha256:aeebfa2890da7819f1617ec9a5650669570ab0802e5f51063aa8
 
 WORKDIR /app
 
-# Copy requirements first to leverage Docker cache
-COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
+# ensure hash enforcement
+ENV PIP_REQUIRE_HASHES=1
+
+# copy the pinned+hashed lock file and install
+COPY requirements.txt ./requirements.txt
+RUN pip install --no-cache-dir --require-hashes -r requirements.txt
 
 # Copy the rest of the application
 COPY . .
