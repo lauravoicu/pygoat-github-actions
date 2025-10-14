@@ -1,29 +1,52 @@
-# .github/workflows/osv-scan.yml
-name: OSV scan (map findings)
+name: OSV scan
+
 on:
   workflow_dispatch: {}
   pull_request:
     branches: [ "master" ]
+  push:
+    branches: [ "master" ]
+  schedule:
+    - cron: "30 12 * * 1"  # Mondays 12:30 UTC
+
+# Required for SARIF upload + least privilege
 permissions:
+  actions: read
+  security-events: write
   contents: read
 
 jobs:
-  osv:
+  # PR diff scan (blocks new vulns introduced in the PR)
+  osv-pr:
+    if: github.event_name == 'pull_request'
+    uses: google/osv-scanner-action/.github/workflows/osv-scanner-reusable-pr.yml@e92b5d07338d4f0ba0981dffed17c48976ca4730
+    # Optional:
+    # with:
+    #   scan-args: |-
+    #     --recursive
+    #     ./
+
+  # Full scan on push/schedule (reports all known vulns)
+  osv-scheduled:
+    if: github.event_name != 'pull_request'
+    uses: google/osv-scanner-action/.github/workflows/osv-scanner-reusable.yml@e92b5d07338d4f0ba0981dffed17c48976ca4730
+
+  osv-json:
+    name: OSV JSON artifact
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
     steps:
       - uses: actions/checkout@v4
-      - name: Scan with OSV (SARIF + JSON)
-        uses: google/osv-scanner-action@v2.2.2
+      - name: Run OSV step action (JSON)
+        uses: google/osv-scanner-action/osv-scanner-action@e92b5d07338d4f0ba0981dffed17c48976ca4730
         with:
-          scan-args: >-
+          scan-args: |-
             --recursive
-            --format sarif,json
-            .
-      - name: Upload SARIF to code scanning
-        uses: github/codeql-action/upload-sarif@v3
-        with:
-          sarif_file: results.sarif
-      - name: Upload raw JSON (artifact)
+            --format json
+            --output results.json
+            ./
+      - name: Upload JSON
         uses: actions/upload-artifact@v4
         with:
           name: osv-results-json
