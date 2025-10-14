@@ -1,0 +1,30 @@
+name: Dependency submission (Component Detection)
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [ "master", "chore/deps-submit" ]
+  schedule:
+    - cron: "23 10 * * 2"   # Tuesdays 10:23 UTC
+
+permissions:
+  contents: read
+
+jobs:
+  submit-deps:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write   # required to submit dependency snapshot
+      id-token: write   # required by the action
+
+    steps:
+      - name: Harden runner
+        uses: step-security/harden-runner@f4a75cfd619ee5ce8d5b864b0d183aff3c69b55a # v2.13.1
+        with:
+          egress-policy: audit
+
+      - name: Checkout
+        uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4
+
+      - name: Detect & submit to Dependency Graph
+        uses: advanced-security/component-detection-dependency-submission-action@v0.0.2
