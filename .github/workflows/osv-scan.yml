@@ -1,0 +1,30 @@
+# .github/workflows/osv-scan.yml
+name: OSV scan (map findings)
+on:
+  workflow_dispatch: {}
+  pull_request:
+    branches: [ "master" ]
+permissions:
+  contents: read
+
+jobs:
+  osv:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Scan with OSV (SARIF + JSON)
+        uses: google/osv-scanner-action@v2.2.2
+        with:
+          scan-args: >-
+            --recursive
+            --format sarif,json
+            .
+      - name: Upload SARIF to code scanning
+        uses: github/codeql-action/upload-sarif@v3
+        with:
+          sarif_file: results.sarif
+      - name: Upload raw JSON (artifact)
+        uses: actions/upload-artifact@v4
+        with:
+          name: osv-results-json
+          path: results.json
