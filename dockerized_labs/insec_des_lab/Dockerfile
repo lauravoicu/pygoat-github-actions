@@ -7,7 +7,7 @@ ENV PIP_REQUIRE_HASHES=1
 
 # copy the pinned+hashed lock file and install
 COPY lab-reqs.txt ./lab-reqs.txt
-RUN pip install --no-cache-dir -r lab-reqs.txt
+RUN pip install --no-cache-dir --require-hashes -r lab-reqs.txt
 
 
 COPY . .
